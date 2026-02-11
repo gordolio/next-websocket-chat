@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next WebSocket Chat
 
-## Getting Started
+A real-time chat app with customizable bighead avatars and planning poker voting, built with Next.js, WebSockets, and SQLite.
 
-First, run the development server:
+## Features
+
+- **Real-time chat rooms** — join by name, share room links via URL hash
+- **Avatar editor** — 20+ options (hair, eyes, hats, clothing, etc.) with live preview and shuffle
+- **Planning poker** — Fibonacci-scale voting with hidden votes and reveal/reset controls
+- **Typing indicators** — see who's currently typing
+- **Browser notifications** — tab title flashing and desktop alerts for new messages
+- **Persistent profiles** — avatars and name colors saved to SQLite across sessions
+
+## Tech stack
+
+| Layer | Tech |
+|-------|------|
+| Framework | Next.js 16 (App Router) |
+| Runtime | Node.js with custom HTTP + WebSocket server |
+| Frontend | React 19, Tailwind CSS 4 |
+| Avatars | `extended-bigheads` |
+| Database | SQLite via `better-sqlite3` |
+| Validation | Zod |
+| Language | TypeScript (strict mode) |
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# install dependencies
+pnpm install
+
+# start dev server (http://localhost:3000)
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000), pick a name and room, and start chatting.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start development server with hot reload |
+| `pnpm build` | Build the Next.js app for production |
+| `pnpm start` | Run the production server |
+| `pnpm lint` | Lint with ESLint |
+| `pnpm format` | Format with Prettier |
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Server port |
+| `NODE_ENV` | `development` | `development`, `production`, or `test` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+server/
+  index.ts            # HTTP + WebSocket server entry
+  chatRoom.ts         # Room, session, and broadcast logic
+  db.ts               # SQLite profile storage
+  env.ts              # Environment variable validation
+src/
+  app/
+    page.tsx           # Login / room selection
+    ChatRoom.tsx       # Main chat UI
+    AvatarEditorModal.tsx  # Avatar customization modal
+    layout.tsx         # Root layout
+    globals.css        # Theme and global styles
+  lib/
+    types.ts           # Shared TypeScript types
+    schemas.ts         # Zod validation schemas
+    useChat.ts         # WebSocket hook (state, reconnect)
+    avatarDefaults.ts  # Avatar generation helpers
+    bigheadOptions.ts  # Avatar option definitions
+data/
+  chat.db             # SQLite database (auto-created)
+```
