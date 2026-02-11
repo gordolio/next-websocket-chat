@@ -277,7 +277,7 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   );
 
   return (
-    <div className="bg-background flex h-screen flex-col">
+    <div className="bg-background flex h-dvh flex-col">
       {/* Header */}
       <header className="bg-surface/80 border-border flex shrink-0 items-center justify-between border-b px-5 py-3 backdrop-blur-md">
         <div className="flex items-center gap-3">

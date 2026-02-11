@@ -50,7 +50,7 @@ export default function Home() {
   }
 
   return (
-    <div className="login-bg flex min-h-screen items-center justify-center p-4">
+    <div className="login-bg flex min-h-dvh items-center justify-center p-4">
       <div className="animate-fade-in-scale w-full max-w-sm">
         {/* Card */}
         <div className="bg-surface/80 border-border relative rounded-2xl border p-8 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl">
