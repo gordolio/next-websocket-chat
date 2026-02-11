@@ -91,7 +91,7 @@ export function startSession(): string {
     roomName: "",
     currentVote: "UNVOTE",
     voteHidden: true,
-    profile: { color: "", avatarConfig: {} as any },
+    profile: { color: "", avatarConfig: generateDefaultAvatar("") },
   };
   sessions.set(session.sessionId, session);
   return session.sessionId;

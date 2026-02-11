@@ -44,11 +44,14 @@ export interface AvatarConfig {
   clothing: string;
   clothingColor: string;
   accessory: string;
+  graphic: string;
   skinTone: string;
   body: string;
   hat: string;
   hatColor: string;
+  lipColor: string;
   lashes: boolean;
+  faceMask: boolean;
 }
 
 export interface UserProfile {

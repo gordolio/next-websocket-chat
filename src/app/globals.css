@@ -1,52 +1,210 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
-  --foreground: #e2e8f0;
-  --surface: #1e293b;
-  --surface-hover: #334155;
-  --border: #334155;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --muted: #64748b;
+  --background: #0c0c0f;
+  --background-secondary: #111116;
+  --foreground: #e8e6e3;
+  --foreground-dim: #a8a29e;
+  --surface: #18181c;
+  --surface-hover: #222228;
+  --surface-active: #2a2a32;
+  --border: #2a2a32;
+  --border-subtle: #1e1e24;
+  --accent: #e2a052;
+  --accent-hover: #d4912e;
+  --accent-glow: rgba(226, 160, 82, 0.15);
+  --accent-subtle: rgba(226, 160, 82, 0.08);
+  --muted: #6b6b76;
+  --success: #4ade80;
+  --danger: #f87171;
+  --ring: rgba(226, 160, 82, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
+  --color-foreground-dim: var(--foreground-dim);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-glow: var(--accent-glow);
+  --color-accent-subtle: var(--accent-subtle);
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-jetbrains-mono);
 }
+
+/* === Base === */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Scrollbar styling */
+/* === Noise texture overlay === */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* === Scrollbar === */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
 
+/* === Selection === */
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+/* === Animations === */
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-  20%, 40%, 60%, 80% { transform: translateX(2px); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50% { box-shadow: 0 0 16px 4px var(--accent-glow); }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* === Gradient mesh background for login === */
+
+.login-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(226, 160, 82, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168, 85, 247, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 70% at 50% 50%, rgba(226, 160, 82, 0.02) 0%, transparent 70%),
+    var(--background);
+}
+
+/* === Input focus glow === */
+
+.input-glow:focus {
+  box-shadow: 0 0 0 3px var(--ring), 0 0 20px -4px var(--accent-glow);
+}
+
+/* === Message hover highlight === */
+
+.message-row {
+  transition: background-color 0.15s ease;
+}
+.message-row:hover {
+  background-color: var(--accent-subtle);
+}
+
+/* === Vote button style === */
+
+.vote-btn {
+  transition: all 0.15s ease;
+}
+.vote-btn:hover {
+  transform: translateY(-1px);
+}
+.vote-btn:active {
+  transform: translateY(0);
+}
+
+/* === Typing indicator dots === */
+
+.typing-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* === Hue slider === */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 99px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }

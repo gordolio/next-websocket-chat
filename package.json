@@ -9,16 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@bigheads/core": "^0.3.3",
+    "@uidotdev/usehooks": "^2.4.1",
     "better-sqlite3": "^12.6.2",
+    "extended-bigheads": "0.0.9",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "use-local-storage-state": "^19.5.0",
     "uuid": "^13.0.0",
     "ws": "^8.19.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "better-sqlite3"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "better-sqlite3"
+    ]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
