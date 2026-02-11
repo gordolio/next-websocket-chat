@@ -2,12 +2,12 @@ import { randomBytes } from "crypto";
 import type { WebSocket } from "ws";
 import type {
   ChatEvent,
-  ClientRequest,
   UserData,
   UserProfile,
   UserVoteData,
   VoteType,
 } from "../src/lib/types";
+import { ClientRequestSchema } from "../src/lib/schemas";
 import { getProfile, upsertProfile } from "./db";
 import {
   generateDefaultAvatar,
@@ -105,12 +105,16 @@ export function connectSocket(sessionId: string, socket: WebSocket) {
 }
 
 export function handleMessage(socket: WebSocket, raw: string) {
-  let request: ClientRequest;
+  let json: unknown;
   try {
-    request = JSON.parse(raw);
+    json = JSON.parse(raw);
   } catch {
     return;
   }
+
+  const result = ClientRequestSchema.safeParse(json);
+  if (!result.success) return;
+  const request = result.data;
 
   switch (request.action) {
     case "connect":

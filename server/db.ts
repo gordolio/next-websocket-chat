@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import path from "path";
-import type { AvatarConfig, UserProfile } from "../src/lib/types";
+import type { UserProfile } from "../src/lib/types";
+import { AvatarConfigSchema } from "../src/lib/schemas";
 
 const dbPath = path.join(process.cwd(), "data", "chat.db");
 const db = new Database(dbPath);
@@ -24,9 +25,11 @@ interface ProfileRow {
 export function getProfile(username: string): UserProfile | null {
   const row = db.prepare("SELECT color, avatar_config FROM user_profiles WHERE username = ?").get(username) as ProfileRow | undefined;
   if (!row) return null;
+  const parsed = AvatarConfigSchema.safeParse(JSON.parse(row.avatar_config));
+  if (!parsed.success) return null;
   return {
     color: row.color,
-    avatarConfig: JSON.parse(row.avatar_config) as AvatarConfig,
+    avatarConfig: parsed.data,
   };
 }
 

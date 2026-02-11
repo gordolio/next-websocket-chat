@@ -29,7 +29,7 @@ interface ChatRoomProps {
   onLeave: () => void;
 }
 
-function UserAvatar({ config, size }: { config?: AvatarConfig; size: number }) {
+function UserAvatar({ config, size }: { config?: AvatarConfig | undefined; size: number }) {
   if (!config) return <div className="rounded-full bg-muted/20" style={{ width: size, height: size }} />;
   return (
     <div style={{ width: size, height: size }} className="shrink-0">
@@ -45,7 +45,7 @@ function UserHoverCard({
   children,
 }: {
   name: string;
-  config?: AvatarConfig;
+  config?: AvatarConfig | undefined;
   color: string;
   children: React.ReactNode;
 }) {

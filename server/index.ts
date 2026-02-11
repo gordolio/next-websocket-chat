@@ -4,10 +4,11 @@ import { parse } from "url";
 import { WebSocketServer } from "ws";
 import { handleDisconnect, handleMessage, startSession } from "./chatRoom";
 import { getProfile } from "./db";
+import { env } from "./env";
 
-const dev = process.env.NODE_ENV !== "production";
+const dev = env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = parseInt(process.env.PORT || "3000", 10);
+const port = env.PORT;
 
 const app = next({ dev, hostname, port });
 

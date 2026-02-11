@@ -8,6 +8,7 @@ import type {
   UserProfile,
   VoteType,
 } from "./types";
+import { ChatEventSchema, StartSessionResponseSchema } from "./schemas";
 
 export interface ChatMessage {
   id: string;
@@ -17,8 +18,8 @@ export interface ChatMessage {
 }
 
 export interface ChatUser extends UserData {
-  vote?: VoteType;
-  profile?: UserProfile;
+  vote?: VoteType | undefined;
+  profile?: UserProfile | undefined;
 }
 
 interface UseChatOptions {
@@ -189,7 +190,8 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
 
     async function connect() {
       const res = await fetch("/api/startSession");
-      const { sessionId } = await res.json();
+      const json = await res.json();
+      const { sessionId } = StartSessionResponseSchema.parse(json);
       if (cancelled) return;
       sessionIdRef.current = sessionId;
 
@@ -206,8 +208,9 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
 
       ws.onmessage = (e) => {
         try {
-          const event: ChatEvent = JSON.parse(e.data);
-          handleEvent(event);
+          const parsed = ChatEventSchema.safeParse(JSON.parse(e.data));
+          if (!parsed.success) return;
+          handleEvent(parsed.data);
         } catch {
           // ignore bad messages
         }

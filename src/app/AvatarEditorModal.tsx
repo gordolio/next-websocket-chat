@@ -28,11 +28,31 @@ interface AvatarEditorModalProps {
   onCancel: () => void;
 }
 
+type BigHeadProps = React.ComponentProps<typeof BigHead>;
+
+/** Keys whose previews should strip face-obscuring items. */
+const FACE_KEYS = new Set<keyof AvatarConfig>(["eyes", "eyebrows", "mouth"]);
+
+function makePreview<K extends keyof AvatarConfig>(
+  base: AvatarConfig,
+  key: K,
+  value: AvatarConfig[K],
+): AvatarConfig {
+  const config: AvatarConfig = { ...base, [key]: value };
+  if (FACE_KEYS.has(key)) {
+    config.hat = "none";
+    config.accessory = "none";
+    config.faceMask = false;
+    config.facialHair = "none";
+  }
+  return config;
+}
+
 /**
- * Renders a row of mini BigHead previews, each with one prop changed.
- * This lets users visually compare options instead of reading text labels.
+ * Mini avatar preview picker. Generic over the config key so
+ * the onChange callback passes properly-typed values.
  */
-function AvatarOptionPicker({
+function AvatarOptionPicker<K extends keyof AvatarConfig>({
   label,
   options,
   value,
@@ -41,35 +61,43 @@ function AvatarOptionPicker({
   onChange,
 }: {
   label: string;
-  options: readonly string[];
-  value: string;
-  configKey: keyof AvatarConfig;
+  options: readonly AvatarConfig[K][];
+  value: AvatarConfig[K];
+  configKey: K;
   baseConfig: AvatarConfig;
-  onChange: (value: string) => void;
+  onChange: (value: AvatarConfig[K]) => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+        {label}
+      </label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
-          const previewConfig = { ...baseConfig, [configKey]: opt };
+          const preview = makePreview(baseConfig, configKey, opt);
+          const selected = value === opt;
           return (
             <button
-              key={opt}
+              key={String(opt)}
               onClick={() => onChange(opt)}
               className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all duration-150 cursor-pointer ${
-                value === opt
+                selected
                   ? "bg-accent/10 border-accent shadow-[0_0_10px_-3px_rgba(226,160,82,0.3)]"
                   : "bg-background border-border hover:bg-surface-hover hover:border-muted/50"
               }`}
             >
               <div className="w-12 h-12">
-                <BigHead {...(previewConfig as React.ComponentProps<typeof BigHead>)} showBackground={false} />
+                <BigHead
+                  {...preview}
+                  showBackground={false}
+                />
               </div>
-              <span className={`text-[10px] font-medium leading-tight ${
-                value === opt ? "text-accent" : "text-muted"
-              }`}>
-                {opt}
+              <span
+                className={`text-[10px] font-medium leading-tight ${
+                  selected ? "text-accent" : "text-muted"
+                }`}
+              >
+                {String(opt)}
               </span>
             </button>
           );
@@ -79,84 +107,88 @@ function AvatarOptionPicker({
   );
 }
 
-/**
- * Simple text-based selector for color options and simple choices.
- */
-function OptionSelector({
+function ToggleSwitch<K extends keyof AvatarConfig>({
   label,
-  options,
-  value,
+  checked,
+  baseConfig,
+  configKey,
   onChange,
 }: {
   label: string;
-  options: readonly string[];
-  value: string;
-  onChange: (value: string) => void;
+  checked: boolean;
+  baseConfig: AvatarConfig;
+  configKey: K;
+  onChange: (value: boolean) => void;
 }) {
+  const previewOn = makePreview(baseConfig, configKey, true as AvatarConfig[K]);
+  const previewOff = makePreview(baseConfig, configKey, false as AvatarConfig[K]);
+
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">{label}</label>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((opt) => (
-          <button
-            key={opt}
-            onClick={() => onChange(opt)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all duration-150 cursor-pointer ${
-              value === opt
-                ? "bg-accent text-background border-accent shadow-[0_0_8px_-2px_rgba(226,160,82,0.3)]"
-                : "bg-background text-foreground-dim border-border hover:bg-surface-hover hover:text-foreground hover:border-muted/50"
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
+      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+        {label}
+      </label>
+      <div className="flex gap-2">
+        {([false, true] as const).map((val) => {
+          const selected = checked === val;
+          const preview = val ? previewOn : previewOff;
+          return (
+            <button
+              key={String(val)}
+              onClick={() => onChange(val)}
+              className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all duration-150 cursor-pointer ${
+                selected
+                  ? "bg-accent/10 border-accent shadow-[0_0_10px_-3px_rgba(226,160,82,0.3)]"
+                  : "bg-background border-border hover:bg-surface-hover hover:border-muted/50"
+              }`}
+            >
+              <div className="w-12 h-12">
+                <BigHead
+                  {...(preview as BigHeadProps)}
+                  showBackground={false}
+                />
+              </div>
+              <span
+                className={`text-[10px] font-medium leading-tight ${
+                  selected ? "text-accent" : "text-muted"
+                }`}
+              >
+                {val ? "on" : "off"}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function ToggleSwitch({
-  label,
-  checked,
+function HueSlider({
+  color,
   onChange,
 }: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
+  color: string;
+  onChange: (color: string) => void;
 }) {
-  return (
-    <div className="flex items-center gap-3">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">{label}</label>
-      <button
-        onClick={() => onChange(!checked)}
-        className={`relative w-10 h-5 rounded-full transition-colors duration-200 cursor-pointer ${
-          checked ? "bg-accent" : "bg-border"
-        }`}
-      >
-        <span
-          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-          style={{ left: checked ? "22px" : "2px" }}
-        />
-      </button>
-    </div>
-  );
-}
-
-function HueSlider({ color, onChange }: { color: string; onChange: (color: string) => void }) {
   const hue = useMemo(() => {
     const match = color.match(/hsl\((\d+)/);
-    return match ? parseInt(match[1]) : 200;
+    return match?.[1] ? parseInt(match[1]) : 200;
   }, [color]);
 
   const gradient = useMemo(
     () =>
-      `linear-gradient(to right, ${Array.from({ length: 24 }, (_, i) => `hsl(${i * 15}, 70%, 72%)`).join(", ")})`,
+      `linear-gradient(to right, ${Array.from(
+        { length: 24 },
+        (_, i) => `hsl(${i * 15}, 70%, 72%)`,
+      ).join(", ")})`,
     [],
   );
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">Name Color</label>
+      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+        Name Color
+      </label>
       <div className="flex items-center gap-4">
         <input
           type="range"
@@ -176,13 +208,34 @@ function HueSlider({ color, onChange }: { color: string; onChange: (color: strin
   );
 }
 
-export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorModalProps) {
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(() => ({ ...profile.avatarConfig }));
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[10px] font-semibold text-muted uppercase tracking-widest">
+        {label}
+      </span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+export function AvatarEditorModal({
+  profile,
+  onSave,
+  onCancel,
+}: AvatarEditorModalProps) {
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(() => ({
+    ...profile.avatarConfig,
+  }));
   const [color, setColor] = useState(() => profile.color);
 
-  const updateConfig = useCallback(<K extends keyof AvatarConfig>(key: K, value: AvatarConfig[K]) => {
-    setAvatarConfig((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateConfig = useCallback(
+    <K extends keyof AvatarConfig>(key: K, value: AvatarConfig[K]) => {
+      setAvatarConfig((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleShuffle = useCallback(() => {
     setAvatarConfig(randomizeAvatar());
@@ -194,29 +247,44 @@ export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorMod
   }, [onSave, color, avatarConfig]);
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onCancel}>
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
       <div
         className="animate-fade-in-scale bg-surface rounded-2xl border border-border shadow-[0_32px_80px_-16px_rgba(0,0,0,0.6)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with preview */}
+        {/* Header with live preview */}
         <div className="flex items-center gap-4 p-5 border-b border-border shrink-0 bg-surface">
-          {/* Avatar preview with glow */}
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl" />
             <div className="relative w-24 h-24 shrink-0">
-              <BigHead {...(avatarConfig as React.ComponentProps<typeof BigHead>)} showBackground={false} />
+              <BigHead
+                {...(avatarConfig as BigHeadProps)}
+                showBackground={false}
+              />
             </div>
           </div>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">Customize Avatar</h2>
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">
+              Customize Avatar
+            </h2>
             <p className="text-sm text-muted mt-0.5">Make it uniquely yours</p>
-            {/* Shuffle button */}
             <button
               onClick={handleShuffle}
               className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors cursor-pointer"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="16 3 21 3 21 8" />
                 <line x1="4" y1="20" x2="21" y2="3" />
                 <polyline points="21 16 21 21 16 21" />
@@ -242,19 +310,11 @@ export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorMod
           </div>
         </div>
 
-        {/* Options */}
-        <div className="p-5 space-y-5 overflow-y-auto">
+        {/* Options — grouped by body region */}
+        <div className="p-5 space-y-4 overflow-y-auto">
           <HueSlider color={color} onChange={setColor} />
 
-          {/* Visual pickers — show mini avatar previews */}
-          <AvatarOptionPicker
-            label="Hair"
-            options={HAIR_OPTIONS}
-            value={avatarConfig.hair}
-            configKey="hair"
-            baseConfig={avatarConfig}
-            onChange={(v) => updateConfig("hair", v)}
-          />
+          <SectionDivider label="Face" />
           <AvatarOptionPicker
             label="Eyes"
             options={EYE_OPTIONS}
@@ -280,12 +340,71 @@ export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorMod
             onChange={(v) => updateConfig("mouth", v)}
           />
           <AvatarOptionPicker
+            label="Lip Color"
+            options={LIP_COLOR_OPTIONS}
+            value={avatarConfig.lipColor}
+            configKey="lipColor"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("lipColor", v)}
+          />
+          <AvatarOptionPicker
+            label="Skin Tone"
+            options={SKIN_TONE_OPTIONS}
+            value={avatarConfig.skinTone}
+            configKey="skinTone"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("skinTone", v)}
+          />
+          <ToggleSwitch
+            label="Lashes"
+            checked={avatarConfig.lashes}
+            configKey="lashes"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("lashes", v)}
+          />
+
+          <SectionDivider label="Hair" />
+          <AvatarOptionPicker
+            label="Hair Style"
+            options={HAIR_OPTIONS}
+            value={avatarConfig.hair}
+            configKey="hair"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("hair", v)}
+          />
+          <AvatarOptionPicker
+            label="Hair Color"
+            options={HAIR_COLOR_OPTIONS}
+            value={avatarConfig.hairColor}
+            configKey="hairColor"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("hairColor", v)}
+          />
+          <AvatarOptionPicker
             label="Facial Hair"
             options={FACIAL_HAIR_OPTIONS}
             value={avatarConfig.facialHair}
             configKey="facialHair"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("facialHair", v)}
+          />
+
+          <SectionDivider label="Accessories" />
+          <AvatarOptionPicker
+            label="Hat"
+            options={HAT_OPTIONS}
+            value={avatarConfig.hat}
+            configKey="hat"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("hat", v)}
+          />
+          <AvatarOptionPicker
+            label="Hat Color"
+            options={HAT_COLOR_OPTIONS}
+            value={avatarConfig.hatColor}
+            configKey="hatColor"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("hatColor", v)}
           />
           <AvatarOptionPicker
             label="Accessory"
@@ -295,13 +414,22 @@ export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorMod
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("accessory", v)}
           />
-          <AvatarOptionPicker
-            label="Hat"
-            options={HAT_OPTIONS}
-            value={avatarConfig.hat}
-            configKey="hat"
+          <ToggleSwitch
+            label="Face Mask"
+            checked={avatarConfig.faceMask}
+            configKey="faceMask"
             baseConfig={avatarConfig}
-            onChange={(v) => updateConfig("hat", v)}
+            onChange={(v) => updateConfig("faceMask", v)}
+          />
+
+          <SectionDivider label="Body" />
+          <AvatarOptionPicker
+            label="Body"
+            options={BODY_OPTIONS}
+            value={avatarConfig.body}
+            configKey="body"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("body", v)}
           />
           <AvatarOptionPicker
             label="Clothing"
@@ -312,60 +440,20 @@ export function AvatarEditorModal({ profile, onSave, onCancel }: AvatarEditorMod
             onChange={(v) => updateConfig("clothing", v)}
           />
           <AvatarOptionPicker
+            label="Clothing Color"
+            options={CLOTHING_COLOR_OPTIONS}
+            value={avatarConfig.clothingColor}
+            configKey="clothingColor"
+            baseConfig={avatarConfig}
+            onChange={(v) => updateConfig("clothingColor", v)}
+          />
+          <AvatarOptionPicker
             label="Clothing Graphic"
             options={GRAPHIC_OPTIONS}
             value={avatarConfig.graphic}
             configKey="graphic"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("graphic", v)}
-          />
-
-          {/* Text-based pickers for colors and simple toggles */}
-          <OptionSelector
-            label="Hair Color"
-            options={HAIR_COLOR_OPTIONS}
-            value={avatarConfig.hairColor}
-            onChange={(v) => updateConfig("hairColor", v)}
-          />
-          <OptionSelector
-            label="Skin Tone"
-            options={SKIN_TONE_OPTIONS}
-            value={avatarConfig.skinTone}
-            onChange={(v) => updateConfig("skinTone", v)}
-          />
-          <OptionSelector
-            label="Body"
-            options={BODY_OPTIONS}
-            value={avatarConfig.body}
-            onChange={(v) => updateConfig("body", v)}
-          />
-          <ToggleSwitch
-            label="Lashes"
-            checked={avatarConfig.lashes}
-            onChange={(v) => updateConfig("lashes", v)}
-          />
-          <ToggleSwitch
-            label="Face Mask"
-            checked={avatarConfig.faceMask}
-            onChange={(v) => updateConfig("faceMask", v)}
-          />
-          <OptionSelector
-            label="Lip Color"
-            options={LIP_COLOR_OPTIONS}
-            value={avatarConfig.lipColor}
-            onChange={(v) => updateConfig("lipColor", v)}
-          />
-          <OptionSelector
-            label="Clothing Color"
-            options={CLOTHING_COLOR_OPTIONS}
-            value={avatarConfig.clothingColor}
-            onChange={(v) => updateConfig("clothingColor", v)}
-          />
-          <OptionSelector
-            label="Hat Color"
-            options={HAT_COLOR_OPTIONS}
-            value={avatarConfig.hatColor}
-            onChange={(v) => updateConfig("hatColor", v)}
           />
         </div>
       </div>

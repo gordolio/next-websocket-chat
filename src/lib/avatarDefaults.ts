@@ -76,7 +76,7 @@ function hashString(str: string): number {
 }
 
 function pick<T>(arr: readonly T[], hash: number, offset: number): T {
-  return arr[(hash + offset * 7) % arr.length];
+  return arr[(hash + offset * 7) % arr.length]!;
 }
 
 export function generateDefaultAvatar(username: string): AvatarConfig {
@@ -108,7 +108,7 @@ export function generateDefaultColor(username: string): string {
 }
 
 function pickRandom<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
 export function randomizeAvatar(): AvatarConfig {
