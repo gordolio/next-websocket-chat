@@ -132,6 +132,7 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   const [input, setInput] = useState("");
   const [selectedVote, setSelectedVote] = useState<VoteTypeT | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const titleIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,6 +193,39 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   useEffect(() => {
     if (connected) inputRef.current?.focus();
   }, [connected]);
+
+  // Resize container to visual viewport height when mobile keyboard opens.
+  // iOS Safari ignores interactive-widget=resizes-content and doesn't resize
+  // the layout viewport, so we use the visualViewport API to handle it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let rafId: number | null = null;
+
+    const onResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (!containerRef.current) return;
+        containerRef.current.style.height = `${vv.height}px`;
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      });
+    };
+
+    onResize();
+    vv.addEventListener("resize", onResize);
+
+    // iOS: prevent page from staying scrolled after keyboard dismissal
+    const onFocusOut = () => {
+      setTimeout(() => window.scrollTo(0, 0), 100);
+    };
+    document.addEventListener("focusout", onFocusOut);
+
+    return () => {
+      vv.removeEventListener("resize", onResize);
+      document.removeEventListener("focusout", onFocusOut);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   // Title flash + notification on new messages when tab is hidden
   const lastMessageCount = useRef(0);
@@ -277,7 +311,7 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   );
 
   return (
-    <div className="bg-background flex h-dvh flex-col">
+    <div ref={containerRef} className="bg-background fixed inset-0 flex flex-col">
       {/* Header */}
       <header className="bg-surface/80 border-border flex shrink-0 items-center justify-between border-b px-5 py-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
