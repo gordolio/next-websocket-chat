@@ -3,25 +3,36 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx server/index.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production tsx server/index.ts",
     "lint": "eslint"
   },
   "dependencies": {
+    "@bigheads/core": "^0.3.3",
+    "better-sqlite3": "^12.6.2",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "uuid": "^13.0.0",
+    "ws": "^8.19.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "better-sqlite3"]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^11.0.0",
+    "@types/ws": "^8.18.1",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

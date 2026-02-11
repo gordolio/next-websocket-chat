@@ -1,65 +1,115 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { ChatRoom } from "./ChatRoom";
 
 export default function Home() {
+  const [name, setName] = useState("");
+  const [room, setRoom] = useState("");
+  const [joined, setJoined] = useState(false);
+  const [nameError, setNameError] = useState(false);
+  const [roomError, setRoomError] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("chat-name") || "";
+    const savedRoom = localStorage.getItem("chat-room") || "";
+    if (savedName) setName(savedName);
+
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setRoom(hash);
+    } else if (savedRoom) {
+      setRoom(savedRoom);
+    }
+
+    nameRef.current?.focus();
+  }, []);
+
+  function handleStart() {
+    const nameEmpty = !name.trim();
+    const roomEmpty = !room.trim();
+    setNameError(nameEmpty);
+    setRoomError(roomEmpty);
+    if (nameEmpty || roomEmpty) return;
+
+    localStorage.setItem("chat-name", name.trim());
+    localStorage.setItem("chat-room", room.trim());
+    setJoined(true);
+  }
+
+  if (joined) {
+    return (
+      <ChatRoom
+        username={name.trim()}
+        roomName={room.trim()}
+        onLeave={() => setJoined(false)}
+      />
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-surface rounded-xl border border-border p-8 shadow-2xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Chat</h1>
+          <p className="text-muted mt-2">Chat with people.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-muted mb-1">
+              Name
+            </label>
+            <input
+              ref={nameRef}
+              id="name"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameError(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              className={`w-full px-3 py-2 rounded-lg bg-background border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent transition ${
+                nameError
+                  ? "border-red-500 animate-[shake_0.4s_ease-in-out]"
+                  : "border-border"
+              }`}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          <div>
+            <label htmlFor="room" className="block text-sm font-medium text-muted mb-1">
+              Room
+            </label>
+            <input
+              id="room"
+              type="text"
+              placeholder="Room name"
+              value={room}
+              onChange={(e) => {
+                setRoom(e.target.value);
+                setRoomError(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              className={`w-full px-3 py-2 rounded-lg bg-background border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent transition ${
+                roomError
+                  ? "border-red-500 animate-[shake_0.4s_ease-in-out]"
+                  : "border-border"
+              }`}
+            />
+          </div>
+
+          <button
+            onClick={handleStart}
+            className="w-full py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-semibold transition cursor-pointer"
           >
-            Documentation
-          </a>
+            Start Chatting
+          </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
