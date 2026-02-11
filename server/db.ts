@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import path from "path";
-import type { UserProfile } from "../src/lib/types";
-import { AvatarConfigSchema } from "../src/lib/schemas";
+import type { AvatarConfig, UserProfile } from "../src/lib/types";
+import { generateDefaultAvatar } from "../src/lib/avatarDefaults";
 
 const dbPath = path.join(process.cwd(), "data", "chat.db");
 const db = new Database(dbPath);
@@ -23,19 +23,24 @@ interface ProfileRow {
 }
 
 export function getProfile(username: string): UserProfile | null {
-  const row = db.prepare("SELECT color, avatar_config FROM user_profiles WHERE username = ?").get(username) as ProfileRow | undefined;
+  const row = db
+    .prepare(
+      "SELECT color, avatar_config FROM user_profiles WHERE username = ?",
+    )
+    .get(username) as ProfileRow | undefined;
   if (!row) return null;
-  const parsed = AvatarConfigSchema.safeParse(JSON.parse(row.avatar_config));
-  if (!parsed.success) return null;
-  return {
-    color: row.color,
-    avatarConfig: parsed.data,
-  };
+
+  // Merge stored config with defaults to fill any missing keys from schema changes
+  const defaults = generateDefaultAvatar(username);
+  const stored = JSON.parse(row.avatar_config) as Partial<AvatarConfig>;
+  const avatarConfig: AvatarConfig = { ...defaults, ...stored };
+
+  return { color: row.color, avatarConfig };
 }
 
 export function upsertProfile(username: string, profile: UserProfile): void {
   db.prepare(
     `INSERT INTO user_profiles (username, color, avatar_config) VALUES (?, ?, ?)
-     ON CONFLICT(username) DO UPDATE SET color = excluded.color, avatar_config = excluded.avatar_config`
+     ON CONFLICT(username) DO UPDATE SET color = excluded.color, avatar_config = excluded.avatar_config`,
   ).run(username, profile.color, JSON.stringify(profile.avatarConfig));
 }

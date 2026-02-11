@@ -6,7 +6,11 @@ import { useVisibilityChange } from "@uidotdev/usehooks";
 import { useChat } from "@/lib/useChat";
 import { getUserColor } from "@/lib/userColor";
 import { VoteType, VOTE_LABELS } from "@/lib/types";
-import type { VoteType as VoteTypeT, AvatarConfig, UserProfile } from "@/lib/types";
+import type {
+  VoteType as VoteTypeT,
+  AvatarConfig,
+  UserProfile,
+} from "@/lib/types";
 import { AvatarEditorModal } from "./AvatarEditorModal";
 
 const VOTABLE_OPTIONS: { value: VoteTypeT; label: string }[] = [
@@ -29,11 +33,23 @@ interface ChatRoomProps {
   onLeave: () => void;
 }
 
-function UserAvatar({ config, size }: { config?: AvatarConfig | undefined; size: number }) {
-  if (!config) return <div className="rounded-full bg-muted/20" style={{ width: size, height: size }} />;
+function UserAvatar({
+  config,
+  size,
+}: {
+  config?: AvatarConfig | undefined;
+  size: number;
+}) {
+  if (!config)
+    return (
+      <div
+        className="bg-muted/20 rounded-full"
+        style={{ width: size, height: size }}
+      />
+    );
   return (
     <div style={{ width: size, height: size }} className="shrink-0">
-      <BigHead {...(config as React.ComponentProps<typeof BigHead>)} showBackground={false} />
+      <BigHead {...config} showBackground={false} />
     </div>
   );
 }
@@ -85,11 +101,13 @@ function UserHoverCard({
         <div
           onMouseEnter={handleCardEnter}
           onMouseLeave={handleLeave}
-          className="animate-fade-in-scale fixed z-50 bg-surface border border-border rounded-2xl shadow-[0_16px_48px_-12px_rgba(0,0,0,0.5)] p-4 flex flex-col items-center gap-2"
+          className="animate-fade-in-scale bg-surface border-border fixed z-50 flex flex-col items-center gap-2 rounded-2xl border p-4 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.5)]"
           style={{ left: pos.x, top: pos.y }}
         >
           <UserAvatar config={config} size={180} />
-          <span className="text-sm font-semibold" style={{ color }}>{name}</span>
+          <span className="text-sm font-semibold" style={{ color }}>
+            {name}
+          </span>
         </div>
       )}
     </>
@@ -99,7 +117,7 @@ function UserHoverCard({
 function TypingIndicator({ text }: { text: string | null }) {
   if (!text) return null;
   return (
-    <div className="flex items-center gap-2 text-sm text-muted py-1.5 px-1 animate-fade-in">
+    <div className="text-muted animate-fade-in flex items-center gap-2 px-1 py-1.5 text-sm">
       <span className="flex items-center gap-1">
         <span className="typing-dot" />
         <span className="typing-dot" />
@@ -152,7 +170,8 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   });
 
   const colorFor = useCallback(
-    (name: string, profile?: UserProfile) => profile?.color || getUserColor(name),
+    (name: string, profile?: UserProfile) =>
+      profile?.color || getUserColor(name),
     [],
   );
 
@@ -184,7 +203,8 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
     lastMessageCount.current = messages.length;
 
     const lastMsg = messages[messages.length - 1];
-    if (!lastMsg || lastMsg.type !== "message" || lastMsg.username === username) return;
+    if (!lastMsg || lastMsg.type !== "message" || lastMsg.username === username)
+      return;
 
     if (!documentVisible) {
       if (titleIntervalRef.current) clearInterval(titleIntervalRef.current);
@@ -198,7 +218,10 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
 
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(lastMsg.username!, { body: lastMsg.text });
-      } else if ("Notification" in window && Notification.permission !== "denied") {
+      } else if (
+        "Notification" in window &&
+        Notification.permission !== "denied"
+      ) {
         Notification.requestPermission().then((permission) => {
           if (permission === "granted") {
             new Notification(lastMsg.username!, { body: lastMsg.text });
@@ -254,29 +277,40 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="bg-background flex h-screen flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-3 bg-surface/80 backdrop-blur-md border-b border-border shrink-0">
+      <header className="bg-surface/80 border-border flex shrink-0 items-center justify-between border-b px-5 py-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-accent/80" />
-            <h1 className="text-base font-semibold text-foreground tracking-tight">{roomName}</h1>
+            <div className="bg-accent/80 h-2 w-2 rounded-full" />
+            <h1 className="text-foreground text-base font-semibold tracking-tight">
+              {roomName}
+            </h1>
           </div>
-          <span className="text-xs text-muted font-mono">{users.length} online</span>
+          <span className="text-muted font-mono text-xs">
+            {users.length} online
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-success" : "bg-danger"}`} />
-            <span className="text-xs text-muted">{connected ? "Connected" : "Reconnecting..."}</span>
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-success" : "bg-danger"}`}
+            />
+            <span className="text-muted text-xs">
+              {connected ? "Connected" : "Reconnecting..."}
+            </span>
           </div>
-          <div className="w-px h-5 bg-border" />
+          <div className="bg-border h-5 w-px" />
           <button
             onClick={() => setShowEditor(true)}
-            className="cursor-pointer flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-surface-hover transition-colors"
+            className="hover:bg-surface-hover flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition-colors"
             title="Edit avatar"
           >
-            <UserAvatar config={myProfile?.avatarConfig} size={48} />
-            <span className="text-sm font-medium" style={{ color: colorFor(username, myProfile ?? undefined) }}>
+            <UserAvatar config={myProfile.avatarConfig} size={48} />
+            <span
+              className="text-sm font-medium"
+              style={{ color: colorFor(username, myProfile) }}
+            >
               {username}
             </span>
           </button>
@@ -284,52 +318,83 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
       </header>
 
       {/* Main area */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         {/* Messages panel */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-3">
             {messages.map((msg, i) =>
               msg.type === "announcement" ? (
-                <div key={msg.id} className="flex items-center justify-center gap-2 text-xs text-muted py-2 animate-fade-in" style={{ animationDelay: `${Math.min(i * 20, 200)}ms` }}>
-                  <div className="h-px flex-1 bg-border/50" />
+                <div
+                  key={msg.id}
+                  className="text-muted animate-fade-in flex items-center justify-center gap-2 py-2 text-xs"
+                  style={{ animationDelay: `${Math.min(i * 20, 200)}ms` }}
+                >
+                  <div className="bg-border/50 h-px flex-1" />
                   <span className="flex items-center gap-1.5 px-2">
-                    <span className="font-medium" style={{ color: colorFor(msg.username || "") }}>{msg.username}</span>
+                    <span
+                      className="font-medium"
+                      style={{ color: colorFor(msg.username || "") }}
+                    >
+                      {msg.username}
+                    </span>
                     <span>{msg.text}</span>
                   </span>
-                  <div className="h-px flex-1 bg-border/50" />
+                  <div className="bg-border/50 h-px flex-1" />
                 </div>
               ) : (
-                <div key={msg.id} className="message-row flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-lg" style={{ animationDelay: `${Math.min(i * 20, 200)}ms` }}>
-                  <UserHoverCard name={msg.username || ""} config={avatarFor(msg.username || "")} color={colorFor(msg.username || "")}>
-                    <div className="shrink-0 mt-0.5">
-                      <UserAvatar config={avatarFor(msg.username || "")} size={56} />
+                <div
+                  key={msg.id}
+                  className="message-row -mx-2 flex items-start gap-3 rounded-lg px-2 py-2.5"
+                  style={{ animationDelay: `${Math.min(i * 20, 200)}ms` }}
+                >
+                  <UserHoverCard
+                    name={msg.username || ""}
+                    config={avatarFor(msg.username || "")}
+                    color={colorFor(msg.username || "")}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      <UserAvatar
+                        config={avatarFor(msg.username || "")}
+                        size={56}
+                      />
                     </div>
                   </UserHoverCard>
-                  <div className="flex-1 min-w-0">
-                    <UserHoverCard name={msg.username || ""} config={avatarFor(msg.username || "")} color={colorFor(msg.username || "")}>
-                      <span className="text-sm font-semibold cursor-default" style={{ color: colorFor(msg.username || "") }}>
+                  <div className="min-w-0 flex-1">
+                    <UserHoverCard
+                      name={msg.username || ""}
+                      config={avatarFor(msg.username || "")}
+                      color={colorFor(msg.username || "")}
+                    >
+                      <span
+                        className="cursor-default text-sm font-semibold"
+                        style={{ color: colorFor(msg.username || "") }}
+                      >
                         {msg.username}
                       </span>
                     </UserHoverCard>
-                    <p className="text-foreground text-[0.9375rem] leading-relaxed mt-0.5 break-words">{msg.text}</p>
+                    <p className="text-foreground mt-0.5 text-[0.9375rem] leading-relaxed break-words">
+                      {msg.text}
+                    </p>
                   </div>
                 </div>
-              )
+              ),
             )}
             <TypingIndicator text={typingText} />
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input area */}
-          <div className="px-4 pb-4 pt-2 shrink-0">
+          <div className="shrink-0 px-4 pt-2 pb-4">
             {/* Voting controls */}
-            <div className="flex flex-wrap items-center gap-1.5 mb-3 px-1">
-              <span className="text-xs font-medium text-muted uppercase tracking-wider mr-1">Vote</span>
+            <div className="mb-3 flex flex-wrap items-center gap-1.5 px-1">
+              <span className="text-muted mr-1 text-xs font-medium tracking-wider uppercase">
+                Vote
+              </span>
               {VOTABLE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => handleVote(opt.value)}
-                  className={`vote-btn min-w-[2rem] px-2 py-1 rounded-lg text-sm font-medium border cursor-pointer ${
+                  className={`vote-btn min-w-[2rem] cursor-pointer rounded-lg border px-2 py-1 text-sm font-medium ${
                     selectedVote === opt.value
                       ? "bg-accent text-background border-accent shadow-[0_0_12px_-2px_rgba(226,160,82,0.3)]"
                       : "bg-surface text-foreground-dim border-border hover:bg-surface-hover hover:text-foreground hover:border-muted/50"
@@ -341,14 +406,14 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
               {selectedVote && (
                 <button
                   onClick={() => handleVote(VoteType.UNVOTE)}
-                  className="vote-btn px-2 py-1 rounded-lg text-sm font-medium border border-border bg-surface text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer"
+                  className="vote-btn border-border bg-surface text-muted hover:text-foreground hover:bg-surface-hover cursor-pointer rounded-lg border px-2 py-1 text-sm font-medium"
                 >
                   Clear
                 </button>
               )}
               <button
                 onClick={handleRevealOrClear}
-                className={`vote-btn ml-auto px-3 py-1 rounded-lg text-sm font-semibold border cursor-pointer ${
+                className={`vote-btn ml-auto cursor-pointer rounded-lg border px-3 py-1 text-sm font-semibold ${
                   votesRevealed
                     ? "border-muted/50 text-muted hover:text-foreground hover:bg-surface-hover"
                     : "border-accent/50 text-accent hover:bg-accent hover:text-background hover:border-accent"
@@ -360,7 +425,7 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
 
             {/* Chat input */}
             <div className="flex gap-2">
-              <div className="flex-1 relative">
+              <div className="relative flex-1">
                 <input
                   ref={inputRef}
                   type="text"
@@ -373,15 +438,24 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
                     if (e.key === "Enter") handleSend();
                   }}
                   placeholder="Write a message..."
-                  className="input-glow w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-foreground placeholder-muted/50 focus:outline-none focus:border-accent/50 transition-all duration-200"
+                  className="input-glow bg-surface border-border text-foreground placeholder-muted/50 focus:border-accent/50 w-full rounded-xl border px-4 py-2.5 transition-all duration-200 focus:outline-none"
                 />
               </div>
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-default text-background font-medium transition-all duration-200 cursor-pointer shadow-[0_2px_12px_-4px_rgba(226,160,82,0.2)] hover:shadow-[0_4px_20px_-4px_rgba(226,160,82,0.3)] active:scale-[0.97]"
+                className="bg-accent hover:bg-accent-hover text-background cursor-pointer rounded-xl px-4 py-2.5 font-medium shadow-[0_2px_12px_-4px_rgba(226,160,82,0.2)] transition-all duration-200 hover:shadow-[0_4px_20px_-4px_rgba(226,160,82,0.3)] active:scale-[0.97] disabled:cursor-default disabled:opacity-30"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M22 2L11 13" />
                   <path d="M22 2L15 22L11 13L2 9L22 2Z" />
                 </svg>
@@ -391,11 +465,11 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
         </div>
 
         {/* Users panel */}
-        <aside className="w-60 bg-surface/50 border-l border-border overflow-y-auto shrink-0 hidden sm:block">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
+        <aside className="bg-surface/50 border-border hidden w-60 shrink-0 overflow-y-auto border-l sm:block">
+          <div className="border-border border-b p-4">
+            <h2 className="text-muted text-xs font-semibold tracking-wider uppercase">
               People
-              <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] px-1 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold">
+              <span className="bg-accent/10 text-accent ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1 py-0.5 text-[10px] font-bold">
                 {users.length}
               </span>
             </h2>
@@ -404,31 +478,41 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
             {users.map((user) => (
               <div
                 key={user.publicId}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-surface-hover/50 transition-colors"
+                className="hover:bg-surface-hover/50 flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors"
               >
-                <UserHoverCard name={user.username} config={user.profile?.avatarConfig} color={colorFor(user.username, user.profile)}>
-                  <div className="shrink-0 relative">
+                <UserHoverCard
+                  name={user.username}
+                  config={user.profile?.avatarConfig}
+                  color={colorFor(user.username, user.profile)}
+                >
+                  <div className="relative shrink-0">
                     <UserAvatar config={user.profile?.avatarConfig} size={48} />
                     {/* Online dot */}
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-surface" />
+                    <div className="bg-success border-surface absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2" />
                   </div>
                 </UserHoverCard>
-                <div className="flex-1 min-w-0">
-                  <UserHoverCard name={user.username} config={user.profile?.avatarConfig} color={colorFor(user.username, user.profile)}>
+                <div className="min-w-0 flex-1">
+                  <UserHoverCard
+                    name={user.username}
+                    config={user.profile?.avatarConfig}
+                    color={colorFor(user.username, user.profile)}
+                  >
                     <span
-                      className="text-sm font-medium truncate block cursor-default"
+                      className="block cursor-default truncate text-sm font-medium"
                       style={{ color: colorFor(user.username, user.profile) }}
                     >
                       {user.username}
                       {user.username === username && (
-                        <span className="text-muted text-xs ml-1 font-normal">(you)</span>
+                        <span className="text-muted ml-1 text-xs font-normal">
+                          (you)
+                        </span>
                       )}
                     </span>
                   </UserHoverCard>
                 </div>
                 {user.vote && user.vote !== VoteType.UNVOTE && (
                   <span
-                    className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                    className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-bold ${
                       user.vote === VoteType.HIDDEN
                         ? "bg-success/10 text-success"
                         : "bg-accent/10 text-accent"
@@ -444,7 +528,7 @@ export function ChatRoom({ username, roomName, onLeave }: ChatRoomProps) {
       </div>
 
       {/* Avatar Editor Modal */}
-      {showEditor && myProfile && (
+      {showEditor && (
         <AvatarEditorModal
           profile={myProfile}
           onSave={handleSaveProfile}

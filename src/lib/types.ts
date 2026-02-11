@@ -34,41 +34,9 @@ export const VOTE_LABELS: Record<string, string> = {
 
 // --- Avatar / Profile ---
 
-export type Hair = "none" | "long" | "bun" | "short" | "pixie" | "balding" | "buzz" | "afro" | "bob" | "mohawk";
-export type HairColor = "blonde" | "brown" | "black" | "white" | "silver" | "red" | "orange" | "blue" | "pink" | "purple" | "lightRed" | "lightOrange" | "lightGreen" | "lightBlue" | "lightPink" | "lightPurple" | "green" | "turqoise" | "lightTurqoise";
-export type Eyes = "normal" | "leftTwitch" | "happy" | "content" | "squint" | "simple" | "dizzy" | "wink" | "heart" | "crazy" | "cute" | "cyborg" | "dollars" | "stars" | "simplePatch" | "piratePatch";
-export type Eyebrows = "raised" | "leftLowered" | "serious" | "angry" | "concerned" | "none";
-export type Mouth = "grin" | "sad" | "openSmile" | "lips" | "open" | "serious" | "tongue" | "piercedTongue" | "vomitingRainbow";
-export type FacialHair = "none" | "stubble" | "mediumBeard" | "goatee";
-export type Clothing = "naked" | "shirt" | "dressShirt" | "vneck" | "tankTop" | "dress" | "denimJacket" | "hoodie" | "chequeredShirt" | "chequeredShirtDark";
-export type ClothingColor = "white" | "gray" | "black" | "red" | "orange" | "yellow" | "green" | "blue" | "pink" | "purple" | "lightRed" | "lightOrange" | "lightYellow" | "lightGreen" | "lightBlue" | "lightPink" | "lightPurple" | "turqoise" | "lightTurqoise";
-export type Accessory = "none" | "roundGlasses" | "tinyGlasses" | "shades" | "hoopEarrings";
-export type Graphic = "none" | "redwood" | "gatsby" | "vue" | "react" | "graphQL" | "donut" | "rainbow";
-export type SkinTone = "light" | "yellow" | "brown" | "dark" | "red" | "black";
-export type Body = "chest" | "breasts";
-export type Hat = "none" | "beanie" | "turban" | "party" | "hijab";
-export type HatColor = ClothingColor;
-export type LipColor = "red" | "pink" | "purple" | "blue" | "green" | "turqoise" | "lightRed" | "lightPink" | "lightPurple" | "lightBlue" | "lightGreen" | "lightTurqoise";
+import type { AvatarProps } from "extended-bigheads";
 
-export interface AvatarConfig {
-  hair: Hair;
-  hairColor: HairColor;
-  eyes: Eyes;
-  eyebrows: Eyebrows;
-  mouth: Mouth;
-  facialHair: FacialHair;
-  clothing: Clothing;
-  clothingColor: ClothingColor;
-  accessory: Accessory;
-  graphic: Graphic;
-  skinTone: SkinTone;
-  body: Body;
-  hat: Hat;
-  hatColor: HatColor;
-  lipColor: LipColor;
-  lashes: boolean;
-  faceMask: boolean;
-}
+export type AvatarConfig = Required<AvatarProps>;
 
 export interface UserProfile {
   color: string;

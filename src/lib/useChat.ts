@@ -9,6 +9,10 @@ import type {
   VoteType,
 } from "./types";
 import { ChatEventSchema, StartSessionResponseSchema } from "./schemas";
+import {
+  generateDefaultAvatar,
+  generateDefaultColor,
+} from "./avatarDefaults";
 
 export interface ChatMessage {
   id: string;
@@ -31,7 +35,12 @@ interface UseChatOptions {
 
 let msgId = 0;
 
-export function useChat({ username, roomName, onConnect, onDisconnect }: UseChatOptions) {
+export function useChat({
+  username,
+  roomName,
+  onConnect,
+  onDisconnect,
+}: UseChatOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const sessionIdRef = useRef<string>("");
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,7 +53,10 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [votesRevealed, setVotesRevealed] = useState(false);
-  const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
+  const [myProfile, setMyProfile] = useState<UserProfile>(() => ({
+    color: generateDefaultColor(username),
+    avatarConfig: generateDefaultAvatar(username),
+  }));
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev, msg]);
@@ -52,9 +64,14 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
 
   const addAnnouncement = useCallback(
     (user: string, text: string) => {
-      addMessage({ id: String(++msgId), type: "announcement", username: user, text });
+      addMessage({
+        id: String(++msgId),
+        type: "announcement",
+        username: user,
+        text,
+      });
     },
-    [addMessage]
+    [addMessage],
   );
 
   const updateTypingUsers = useCallback(() => {
@@ -74,7 +91,7 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
         updateTypingUsers();
       }
     },
-    [updateTypingUsers]
+    [updateTypingUsers],
   );
 
   const handleEvent = useCallback(
@@ -88,7 +105,7 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
               publicId: u.publicId,
               vote: u.vote,
               profile: u.profile,
-            }))
+            })),
           );
           // Set our own profile from the join event
           {
@@ -139,8 +156,8 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
           }
           setUsers((prev) =>
             prev.map((u) =>
-              u.publicId === event.publicId ? { ...u, vote: event.vote } : u
-            )
+              u.publicId === event.publicId ? { ...u, vote: event.vote } : u,
+            ),
           );
           break;
 
@@ -149,16 +166,20 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
           setVotesRevealed(true);
           setUsers((prev) =>
             prev.map((u) => {
-              const voteData = event.votes.find((v) => v.publicId === u.publicId);
+              const voteData = event.votes.find(
+                (v) => v.publicId === u.publicId,
+              );
               return voteData ? { ...u, vote: voteData.vote } : u;
-            })
+            }),
           );
           break;
 
         case "ClearVotesEvent":
           addAnnouncement(event.username, "cleared the votes.");
           setVotesRevealed(false);
-          setUsers((prev) => prev.map((u) => ({ ...u, vote: "UNVOTE" as VoteType })));
+          setUsers((prev) =>
+            prev.map((u) => ({ ...u, vote: "UNVOTE" as VoteType })),
+          );
           break;
 
         case "ProfileUpdateEvent":
@@ -166,8 +187,8 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
             prev.map((u) =>
               u.publicId === event.publicId
                 ? { ...u, profile: event.profile }
-                : u
-            )
+                : u,
+            ),
           );
           // Update our own profile if it's ours
           if (event.username === username) {
@@ -176,7 +197,13 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
           break;
       }
     },
-    [addMessage, addAnnouncement, clearTypingTimeout, updateTypingUsers, username]
+    [
+      addMessage,
+      addAnnouncement,
+      clearTypingTimeout,
+      updateTypingUsers,
+      username,
+    ],
   );
 
   const send = useCallback((request: ClientRequest) => {
@@ -253,7 +280,7 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
         typingTimeoutRef.current = null;
       }
     },
-    [send, roomName]
+    [send, roomName],
   );
 
   const sendTyping = useCallback(() => {
@@ -278,7 +305,7 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
         vote: voteType,
       });
     },
-    [send, roomName]
+    [send, roomName],
   );
 
   const revealVotes = useCallback(() => {
@@ -306,7 +333,7 @@ export function useChat({ username, roomName, onConnect, onDisconnect }: UseChat
         profile,
       });
     },
-    [send, roomName]
+    [send, roomName],
   );
 
   return {

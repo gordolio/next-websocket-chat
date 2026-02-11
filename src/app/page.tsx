@@ -10,15 +10,22 @@ function getHashRoom() {
 }
 
 export default function Home() {
-  const [savedName, setSavedName] = useLocalStorageState("chat-name", { defaultValue: "" });
-  const [savedRoom, setSavedRoom] = useLocalStorageState("chat-room", { defaultValue: "" });
+  const [savedName, setSavedName] = useLocalStorageState("chat-name", {
+    defaultValue: "",
+  });
+  const [savedRoom, setSavedRoom] = useLocalStorageState("chat-room", {
+    defaultValue: "",
+  });
 
   const [name, setName] = useState(savedName);
   const [room, setRoom] = useState(() => getHashRoom() || savedRoom);
   const [joined, setJoined] = useState(false);
   const [nameError, setNameError] = useState(false);
   const [roomError, setRoomError] = useState(false);
-  const nameRef = useCallback((node: HTMLInputElement | null) => node?.focus(), []);
+  const nameRef = useCallback(
+    (node: HTMLInputElement | null) => node?.focus(),
+    [],
+  );
 
   const handleStart = useCallback(() => {
     const nameEmpty = !name.trim();
@@ -43,29 +50,44 @@ export default function Home() {
   }
 
   return (
-    <div className="login-bg min-h-screen flex items-center justify-center p-4">
+    <div className="login-bg flex min-h-screen items-center justify-center p-4">
       <div className="animate-fade-in-scale w-full max-w-sm">
         {/* Card */}
-        <div className="relative bg-surface/80 backdrop-blur-xl rounded-2xl border border-border p-8 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.6)]">
+        <div className="bg-surface/80 border-border relative rounded-2xl border p-8 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl">
           {/* Subtle top accent line */}
-          <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+          <div className="via-accent/40 absolute top-0 right-8 left-8 h-px bg-gradient-to-r from-transparent to-transparent" />
 
-          <div className="text-center mb-8">
+          <div className="mb-8 text-center">
             {/* Logo mark */}
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 mb-4">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+            <div className="bg-accent/10 border-accent/20 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl border">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-accent"
+              >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
               Join the conversation
             </h1>
-            <p className="text-muted text-sm mt-1.5">Pick a name and a room to get started</p>
+            <p className="text-muted mt-1.5 text-sm">
+              Pick a name and a room to get started
+            </p>
           </div>
 
           <div className="space-y-5">
             <div>
-              <label htmlFor="name" className="block text-xs font-medium text-muted uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="name"
+                className="text-muted mb-1.5 block text-xs font-medium tracking-wider uppercase"
+              >
                 Your name
               </label>
               <input
@@ -79,7 +101,7 @@ export default function Home() {
                   setNameError(false);
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
-                className={`input-glow w-full px-4 py-2.5 rounded-xl bg-background border text-foreground placeholder-muted/60 focus:outline-none transition-all duration-200 ${
+                className={`input-glow bg-background text-foreground placeholder-muted/60 w-full rounded-xl border px-4 py-2.5 transition-all duration-200 focus:outline-none ${
                   nameError
                     ? "border-danger animate-[shake_0.4s_ease-in-out]"
                     : "border-border hover:border-muted/50 focus:border-accent/50"
@@ -88,7 +110,10 @@ export default function Home() {
             </div>
 
             <div>
-              <label htmlFor="room" className="block text-xs font-medium text-muted uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="room"
+                className="text-muted mb-1.5 block text-xs font-medium tracking-wider uppercase"
+              >
                 Room
               </label>
               <input
@@ -101,7 +126,7 @@ export default function Home() {
                   setRoomError(false);
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
-                className={`input-glow w-full px-4 py-2.5 rounded-xl bg-background border text-foreground placeholder-muted/60 focus:outline-none transition-all duration-200 ${
+                className={`input-glow bg-background text-foreground placeholder-muted/60 w-full rounded-xl border px-4 py-2.5 transition-all duration-200 focus:outline-none ${
                   roomError
                     ? "border-danger animate-[shake_0.4s_ease-in-out]"
                     : "border-border hover:border-muted/50 focus:border-accent/50"
@@ -111,11 +136,21 @@ export default function Home() {
 
             <button
               onClick={handleStart}
-              className="group w-full py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-background font-semibold transition-all duration-200 cursor-pointer shadow-[0_2px_16px_-4px_rgba(226,160,82,0.3)] hover:shadow-[0_4px_24px_-4px_rgba(226,160,82,0.4)] active:scale-[0.98]"
+              className="group bg-accent hover:bg-accent-hover text-background w-full cursor-pointer rounded-xl py-2.5 font-semibold shadow-[0_2px_16px_-4px_rgba(226,160,82,0.3)] transition-all duration-200 hover:shadow-[0_4px_24px_-4px_rgba(226,160,82,0.4)] active:scale-[0.98]"
             >
               <span className="flex items-center justify-center gap-2">
                 Start Chatting
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform group-hover:translate-x-0.5"
+                >
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
                 </svg>
@@ -125,8 +160,9 @@ export default function Home() {
         </div>
 
         {/* Footer hint */}
-        <p className="text-center text-muted/50 text-xs mt-4">
-          Tip: share a room link with <span className="font-mono text-muted/70">#room-name</span> in the URL
+        <p className="text-muted/50 mt-4 text-center text-xs">
+          Tip: share a room link with{" "}
+          <span className="text-muted/70 font-mono">#room-name</span> in the URL
         </p>
       </div>
     </div>

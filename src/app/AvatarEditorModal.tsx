@@ -1,26 +1,9 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { BigHead } from "extended-bigheads";
+import { BigHead, bigHeadOptions } from "extended-bigheads";
 import type { AvatarConfig, UserProfile } from "@/lib/types";
-import {
-  HAIR_OPTIONS,
-  HAIR_COLOR_OPTIONS,
-  EYE_OPTIONS,
-  EYEBROW_OPTIONS,
-  MOUTH_OPTIONS,
-  FACIAL_HAIR_OPTIONS,
-  CLOTHING_OPTIONS,
-  CLOTHING_COLOR_OPTIONS,
-  ACCESSORY_OPTIONS,
-  GRAPHIC_OPTIONS,
-  SKIN_TONE_OPTIONS,
-  BODY_OPTIONS,
-  HAT_OPTIONS,
-  HAT_COLOR_OPTIONS,
-  LIP_COLOR_OPTIONS,
-  randomizeAvatar,
-} from "@/lib/avatarDefaults";
+import { randomizeAvatar } from "@/lib/avatarDefaults";
 
 interface AvatarEditorModalProps {
   profile: UserProfile;
@@ -30,22 +13,29 @@ interface AvatarEditorModalProps {
 
 type BigHeadProps = React.ComponentProps<typeof BigHead>;
 
-/** Keys whose previews should strip face-obscuring items. */
-const FACE_KEYS = new Set<keyof AvatarConfig>(["eyes", "eyebrows", "mouth"]);
+/** Cast a string[] from bigHeadOptions to the narrow union array AvatarConfig[K][]. */
+const opts = <K extends keyof AvatarConfig>(arr: string[]) =>
+  arr as unknown as AvatarConfig[K][];
+
+/** Per-key overrides to strip items that would obscure the thing being previewed. */
+const PREVIEW_OVERRIDES: Partial<Record<keyof AvatarConfig, Partial<AvatarConfig>>> = {
+  eyes:     { hat: "none", accessory: "none", faceMask: false, facialHair: "none" },
+  eyebrows: { hat: "none", accessory: "none", faceMask: false, facialHair: "none" },
+  mouth:    { hat: "none", accessory: "none", faceMask: false, facialHair: "none" },
+  lipColor: { hat: "none", accessory: "none", faceMask: false, facialHair: "none" },
+  hair:     { hat: "none", accessory: "none", faceMask: false },
+};
 
 function makePreview<K extends keyof AvatarConfig>(
   base: AvatarConfig,
   key: K,
   value: AvatarConfig[K],
 ): AvatarConfig {
-  const config: AvatarConfig = { ...base, [key]: value };
-  if (FACE_KEYS.has(key)) {
-    config.hat = "none";
-    config.accessory = "none";
-    config.faceMask = false;
-    config.facialHair = "none";
-  }
-  return config;
+  return {
+    ...base,
+    ...PREVIEW_OVERRIDES[key],
+    [key]: value,
+  };
 }
 
 /**
@@ -59,6 +49,8 @@ function AvatarOptionPicker<K extends keyof AvatarConfig>({
   configKey,
   baseConfig,
   onChange,
+  disabled,
+  disabledHint,
 }: {
   label: string;
   options: readonly AvatarConfig[K][];
@@ -66,13 +58,22 @@ function AvatarOptionPicker<K extends keyof AvatarConfig>({
   configKey: K;
   baseConfig: AvatarConfig;
   onChange: (value: AvatarConfig[K]) => void;
+  disabled?: boolean;
+  disabledHint?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+    <div className={`flex flex-col gap-2 ${disabled ? "opacity-40" : ""}`}>
+      <label className="text-muted text-xs font-medium tracking-wider uppercase">
         {label}
+        {disabled && disabledHint && (
+          <span className="text-muted/70 ml-2 tracking-normal normal-case italic">
+            {disabledHint}
+          </span>
+        )}
       </label>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className={`flex flex-wrap gap-2 ${disabled ? "pointer-events-none" : ""}`}
+      >
         {options.map((opt) => {
           const preview = makePreview(baseConfig, configKey, opt);
           const selected = value === opt;
@@ -80,20 +81,18 @@ function AvatarOptionPicker<K extends keyof AvatarConfig>({
             <button
               key={String(opt)}
               onClick={() => onChange(opt)}
-              className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all duration-150 cursor-pointer ${
+              disabled={disabled}
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-1.5 transition-all duration-150 ${
                 selected
                   ? "bg-accent/10 border-accent shadow-[0_0_10px_-3px_rgba(226,160,82,0.3)]"
                   : "bg-background border-border hover:bg-surface-hover hover:border-muted/50"
               }`}
             >
-              <div className="w-12 h-12">
-                <BigHead
-                  {...preview}
-                  showBackground={false}
-                />
+              <div className="h-12 w-12">
+                <BigHead {...preview} showBackground={false} />
               </div>
               <span
-                className={`text-[10px] font-medium leading-tight ${
+                className={`text-[10px] leading-tight font-medium ${
                   selected ? "text-accent" : "text-muted"
                 }`}
               >
@@ -121,11 +120,15 @@ function ToggleSwitch<K extends keyof AvatarConfig>({
   onChange: (value: boolean) => void;
 }) {
   const previewOn = makePreview(baseConfig, configKey, true as AvatarConfig[K]);
-  const previewOff = makePreview(baseConfig, configKey, false as AvatarConfig[K]);
+  const previewOff = makePreview(
+    baseConfig,
+    configKey,
+    false as AvatarConfig[K],
+  );
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+      <label className="text-muted text-xs font-medium tracking-wider uppercase">
         {label}
       </label>
       <div className="flex gap-2">
@@ -136,20 +139,20 @@ function ToggleSwitch<K extends keyof AvatarConfig>({
             <button
               key={String(val)}
               onClick={() => onChange(val)}
-              className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all duration-150 cursor-pointer ${
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-1.5 transition-all duration-150 ${
                 selected
                   ? "bg-accent/10 border-accent shadow-[0_0_10px_-3px_rgba(226,160,82,0.3)]"
                   : "bg-background border-border hover:bg-surface-hover hover:border-muted/50"
               }`}
             >
-              <div className="w-12 h-12">
+              <div className="h-12 w-12">
                 <BigHead
                   {...(preview as BigHeadProps)}
                   showBackground={false}
                 />
               </div>
               <span
-                className={`text-[10px] font-medium leading-tight ${
+                className={`text-[10px] leading-tight font-medium ${
                   selected ? "text-accent" : "text-muted"
                 }`}
               >
@@ -186,7 +189,7 @@ function HueSlider({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-muted uppercase tracking-wider">
+      <label className="text-muted text-xs font-medium tracking-wider uppercase">
         Name Color
       </label>
       <div className="flex items-center gap-4">
@@ -200,7 +203,7 @@ function HueSlider({
           style={{ background: gradient }}
         />
         <div
-          className="w-9 h-9 rounded-xl border-2 border-border shrink-0 shadow-inner"
+          className="border-border h-9 w-9 shrink-0 rounded-xl border-2 shadow-inner"
           style={{ backgroundColor: color }}
         />
       </div>
@@ -211,11 +214,11 @@ function HueSlider({
 function SectionDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 pt-2">
-      <div className="h-px flex-1 bg-border" />
-      <span className="text-[10px] font-semibold text-muted uppercase tracking-widest">
+      <div className="bg-border h-px flex-1" />
+      <span className="text-muted text-[10px] font-semibold tracking-widest uppercase">
         {label}
       </span>
-      <div className="h-px flex-1 bg-border" />
+      <div className="bg-border h-px flex-1" />
     </div>
   );
 }
@@ -248,18 +251,18 @@ export function AvatarEditorModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onClick={onCancel}
     >
       <div
-        className="animate-fade-in-scale bg-surface rounded-2xl border border-border shadow-[0_32px_80px_-16px_rgba(0,0,0,0.6)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="animate-fade-in-scale bg-surface border-border flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-[0_32px_80px_-16px_rgba(0,0,0,0.6)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with live preview */}
-        <div className="flex items-center gap-4 p-5 border-b border-border shrink-0 bg-surface">
+        <div className="border-border bg-surface flex shrink-0 items-center gap-4 border-b p-5">
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl" />
-            <div className="relative w-24 h-24 shrink-0">
+            <div className="bg-accent/10 absolute inset-0 rounded-full blur-xl" />
+            <div className="relative h-24 w-24 shrink-0">
               <BigHead
                 {...(avatarConfig as BigHeadProps)}
                 showBackground={false}
@@ -267,13 +270,13 @@ export function AvatarEditorModal({
             </div>
           </div>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground tracking-tight">
+            <h2 className="text-foreground text-lg font-semibold tracking-tight">
               Customize Avatar
             </h2>
-            <p className="text-sm text-muted mt-0.5">Make it uniquely yours</p>
+            <p className="text-muted mt-0.5 text-sm">Make it uniquely yours</p>
             <button
               onClick={handleShuffle}
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors cursor-pointer"
+              className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/20 mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
             >
               <svg
                 width="14"
@@ -297,13 +300,13 @@ export function AvatarEditorModal({
           <div className="flex gap-2 self-start">
             <button
               onClick={onCancel}
-              className="px-3.5 py-1.5 rounded-xl text-sm font-medium border border-border text-foreground-dim hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+              className="border-border text-foreground-dim hover:text-foreground hover:bg-surface-hover cursor-pointer rounded-xl border px-3.5 py-1.5 text-sm font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-3.5 py-1.5 rounded-xl text-sm font-medium bg-accent hover:bg-accent-hover text-background transition-all duration-200 cursor-pointer shadow-[0_2px_12px_-4px_rgba(226,160,82,0.3)]"
+              className="bg-accent hover:bg-accent-hover text-background cursor-pointer rounded-xl px-3.5 py-1.5 text-sm font-medium shadow-[0_2px_12px_-4px_rgba(226,160,82,0.3)] transition-all duration-200"
             >
               Save
             </button>
@@ -311,13 +314,13 @@ export function AvatarEditorModal({
         </div>
 
         {/* Options — grouped by body region */}
-        <div className="p-5 space-y-4 overflow-y-auto">
+        <div className="space-y-4 overflow-y-auto p-5">
           <HueSlider color={color} onChange={setColor} />
 
           <SectionDivider label="Face" />
           <AvatarOptionPicker
             label="Eyes"
-            options={EYE_OPTIONS}
+            options={opts<"eyes">(bigHeadOptions.eyes)}
             value={avatarConfig.eyes}
             configKey="eyes"
             baseConfig={avatarConfig}
@@ -325,7 +328,7 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Eyebrows"
-            options={EYEBROW_OPTIONS}
+            options={opts<"eyebrows">(bigHeadOptions.eyebrows)}
             value={avatarConfig.eyebrows}
             configKey="eyebrows"
             baseConfig={avatarConfig}
@@ -333,7 +336,7 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Mouth"
-            options={MOUTH_OPTIONS}
+            options={opts<"mouth">(bigHeadOptions.mouth)}
             value={avatarConfig.mouth}
             configKey="mouth"
             baseConfig={avatarConfig}
@@ -341,15 +344,17 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Lip Color"
-            options={LIP_COLOR_OPTIONS}
+            options={opts<"lipColor">(bigHeadOptions.lipColor)}
             value={avatarConfig.lipColor}
             configKey="lipColor"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("lipColor", v)}
+            disabled={avatarConfig.mouth !== "lips"}
+            disabledHint="— requires lips mouth"
           />
           <AvatarOptionPicker
             label="Skin Tone"
-            options={SKIN_TONE_OPTIONS}
+            options={opts<"skinTone">(bigHeadOptions.skinTone)}
             value={avatarConfig.skinTone}
             configKey="skinTone"
             baseConfig={avatarConfig}
@@ -366,7 +371,7 @@ export function AvatarEditorModal({
           <SectionDivider label="Hair" />
           <AvatarOptionPicker
             label="Hair Style"
-            options={HAIR_OPTIONS}
+            options={opts<"hair">(bigHeadOptions.hair)}
             value={avatarConfig.hair}
             configKey="hair"
             baseConfig={avatarConfig}
@@ -374,15 +379,17 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Hair Color"
-            options={HAIR_COLOR_OPTIONS}
+            options={opts<"hairColor">(bigHeadOptions.hairColor)}
             value={avatarConfig.hairColor}
             configKey="hairColor"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("hairColor", v)}
+            disabled={avatarConfig.hair === "none"}
+            disabledHint="— choose a hair style first"
           />
           <AvatarOptionPicker
             label="Facial Hair"
-            options={FACIAL_HAIR_OPTIONS}
+            options={opts<"facialHair">(bigHeadOptions.facialHair)}
             value={avatarConfig.facialHair}
             configKey="facialHair"
             baseConfig={avatarConfig}
@@ -392,7 +399,7 @@ export function AvatarEditorModal({
           <SectionDivider label="Accessories" />
           <AvatarOptionPicker
             label="Hat"
-            options={HAT_OPTIONS}
+            options={opts<"hat">(bigHeadOptions.hat)}
             value={avatarConfig.hat}
             configKey="hat"
             baseConfig={avatarConfig}
@@ -400,15 +407,17 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Hat Color"
-            options={HAT_COLOR_OPTIONS}
+            options={opts<"hatColor">(bigHeadOptions.hatColor)}
             value={avatarConfig.hatColor}
             configKey="hatColor"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("hatColor", v)}
+            disabled={avatarConfig.hat === "none"}
+            disabledHint="— choose a hat first"
           />
           <AvatarOptionPicker
             label="Accessory"
-            options={ACCESSORY_OPTIONS}
+            options={opts<"accessory">(bigHeadOptions.accessory)}
             value={avatarConfig.accessory}
             configKey="accessory"
             baseConfig={avatarConfig}
@@ -425,7 +434,7 @@ export function AvatarEditorModal({
           <SectionDivider label="Body" />
           <AvatarOptionPicker
             label="Body"
-            options={BODY_OPTIONS}
+            options={opts<"body">(bigHeadOptions.body)}
             value={avatarConfig.body}
             configKey="body"
             baseConfig={avatarConfig}
@@ -433,7 +442,7 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Clothing"
-            options={CLOTHING_OPTIONS}
+            options={opts<"clothing">(bigHeadOptions.clothing)}
             value={avatarConfig.clothing}
             configKey="clothing"
             baseConfig={avatarConfig}
@@ -441,19 +450,23 @@ export function AvatarEditorModal({
           />
           <AvatarOptionPicker
             label="Clothing Color"
-            options={CLOTHING_COLOR_OPTIONS}
+            options={opts<"clothingColor">(bigHeadOptions.clothingColor)}
             value={avatarConfig.clothingColor}
             configKey="clothingColor"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("clothingColor", v)}
+            disabled={avatarConfig.clothing === "naked"}
+            disabledHint="— choose clothing first"
           />
           <AvatarOptionPicker
             label="Clothing Graphic"
-            options={GRAPHIC_OPTIONS}
+            options={opts<"graphic">(bigHeadOptions.graphic)}
             value={avatarConfig.graphic}
             configKey="graphic"
             baseConfig={avatarConfig}
             onChange={(v) => updateConfig("graphic", v)}
+            disabled={avatarConfig.clothing === "naked"}
+            disabledHint="— choose clothing first"
           />
         </div>
       </div>

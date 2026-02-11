@@ -1,21 +1,6 @@
 import { z } from "zod";
-import {
-  HAIR_OPTIONS,
-  HAIR_COLOR_OPTIONS,
-  EYE_OPTIONS,
-  EYEBROW_OPTIONS,
-  MOUTH_OPTIONS,
-  FACIAL_HAIR_OPTIONS,
-  CLOTHING_OPTIONS,
-  CLOTHING_COLOR_OPTIONS,
-  ACCESSORY_OPTIONS,
-  GRAPHIC_OPTIONS,
-  SKIN_TONE_OPTIONS,
-  BODY_OPTIONS,
-  HAT_OPTIONS,
-  HAT_COLOR_OPTIONS,
-  LIP_COLOR_OPTIONS,
-} from "./avatarDefaults";
+import { bigHeadOptions } from "./bigheadOptions";
+import type { AvatarConfig, UserProfile } from "./types";
 
 // --- Vote ---
 
@@ -37,30 +22,38 @@ export const VoteTypeSchema = z.enum([
 
 // --- Avatar / Profile ---
 
-export const AvatarConfigSchema = z.object({
-  hair: z.enum(HAIR_OPTIONS),
-  hairColor: z.enum(HAIR_COLOR_OPTIONS),
-  eyes: z.enum(EYE_OPTIONS),
-  eyebrows: z.enum(EYEBROW_OPTIONS),
-  mouth: z.enum(MOUTH_OPTIONS),
-  facialHair: z.enum(FACIAL_HAIR_OPTIONS),
-  clothing: z.enum(CLOTHING_OPTIONS),
-  clothingColor: z.enum(CLOTHING_COLOR_OPTIONS),
-  accessory: z.enum(ACCESSORY_OPTIONS),
-  graphic: z.enum(GRAPHIC_OPTIONS),
-  skinTone: z.enum(SKIN_TONE_OPTIONS),
-  body: z.enum(BODY_OPTIONS),
-  hat: z.enum(HAT_OPTIONS),
-  hatColor: z.enum(HAT_COLOR_OPTIONS),
-  lipColor: z.enum(LIP_COLOR_OPTIONS),
+const AvatarConfigRaw = z.object({
+  hair: z.enum(bigHeadOptions.hair),
+  hairColor: z.enum(bigHeadOptions.hairColor),
+  eyes: z.enum(bigHeadOptions.eyes),
+  eyebrows: z.enum(bigHeadOptions.eyebrows),
+  mouth: z.enum(bigHeadOptions.mouth),
+  facialHair: z.enum(bigHeadOptions.facialHair),
+  clothing: z.enum(bigHeadOptions.clothing),
+  clothingColor: z.enum(bigHeadOptions.clothingColor),
+  accessory: z.enum(bigHeadOptions.accessory),
+  graphic: z.enum(bigHeadOptions.graphic),
+  skinTone: z.enum(bigHeadOptions.skinTone),
+  body: z.enum(bigHeadOptions.body),
+  hat: z.enum(bigHeadOptions.hat),
+  hatColor: z.enum(bigHeadOptions.hatColor),
+  lipColor: z.enum(bigHeadOptions.lipColor),
+  facialHairColor: z.enum(bigHeadOptions.facialHairColor),
+  backgroundColor: z.enum(bigHeadOptions.backgroundColor),
+  backgroundShape: z.enum(bigHeadOptions.backgroundShape),
+  faceMaskColor: z.enum(bigHeadOptions.faceMaskColor),
+  showBackground: z.boolean(),
   lashes: z.boolean(),
   faceMask: z.boolean(),
 });
 
-export const UserProfileSchema = z.object({
+export const AvatarConfigSchema: z.ZodType<AvatarConfig> =
+  AvatarConfigRaw as z.ZodType<AvatarConfig>;
+
+export const UserProfileSchema: z.ZodType<UserProfile> = z.object({
   color: z.string(),
   avatarConfig: AvatarConfigSchema,
-});
+}) as z.ZodType<UserProfile>;
 
 // --- User Data ---
 
